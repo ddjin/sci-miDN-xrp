@@ -7,8 +7,12 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+// my added imports
 import edu.wpi.first.wpilibj.xrp.XRPMotor;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -17,16 +21,26 @@ import edu.wpi.first.wpilibj.XboxController;
  */
 public class Robot extends TimedRobot {
   private XboxController m_controller = new XboxController(0);
+  private static final String kDefaultAuto = "Default";
+  private static final String kCustomAuto = "My Auto";
+  private String m_autoSelected;
+  private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
   private XRPMotor m_leftMotor = new XRPMotor(0);
   private XRPMotor m_rightMotor = new XRPMotor(1);
+  private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotor, m_rightMotor);
+
+private final Timer mTimer = new Timer();
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   public Robot() {
-    m_rightMotor.setInverted(true);
+   
   }
-
+  
+  
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
    * that you want ran during disabled, autonomous, teleoperated and test.
@@ -49,13 +63,30 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+m_chooser.setDefaultOption(name:"Default Auto", kDefaultAuto);
+m_chooser.addOption(name:"My Auto", kCustomAuto);
+    SmartDashboard.putData("Auto choices", m_chooser);
 
+    m_rightMotor.setInverted(true);
+ System.out.println("Auto selected: " + m_autoSelected);
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-
+switch (m_autoSelected) {
+      case kCustomAuto:
+        // Put custom auto code here
+        System.out.println("Running custom auto");
+        break;
+      case kDefaultAuto:
+      default:
+        // Put default auto code here
+        m_leftMotor.set(0.5);
+        m_rightMotor.set(-0.5);
+        System.out.println("Running default auto");
+        break;
+    }
   }
 
   /** This function is called once when teleop is enabled. */
