@@ -7,11 +7,11 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-// my added imports
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.xrp.XRPMotor;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.xrp.XRPServo;
 
 
 /**
@@ -21,26 +21,27 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
  */
 public class Robot extends TimedRobot {
   private XboxController m_controller = new XboxController(0);
+  private XRPMotor m_leftMotor = new XRPMotor(0);
+  private XRPMotor m_rightMotor = new XRPMotor(1);
+
+// Nicole's code//
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+  private final DifferentialDrive mDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
 
-  private XRPMotor m_leftMotor = new XRPMotor(0);
-  private XRPMotor m_rightMotor = new XRPMotor(1);
-  private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotor, m_rightMotor);
-
-private final Timer mTimer = new Timer();
+  private final Timer mTimer = new Timer();
+  private final XRPServo backServo = new XRPServo(deviceNum:4);
 
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   public Robot() {
-   
+    m_rightMotor.setInverted(true);
   }
-  
-  
+
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
    * that you want ran during disabled, autonomous, teleoperated and test.
@@ -69,25 +70,49 @@ m_chooser.addOption(name:"My Auto", kCustomAuto);
 
     m_rightMotor.setInverted(true);
  System.out.println("Auto selected: " + m_autoSelected);
+   mTimer.start();
+   mTimer.reset();
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-switch (m_autoSelected) {
+   switch (m_autoSelected) {
       case kCustomAuto:
-        // Put custom auto code here
+         backServo.setPosition(pos:1);
         System.out.println("Running custom auto");
         break;
       case kDefaultAuto:
       default:
-        // Put default auto code here
-        m_leftMotor.set(0.5);
-        m_rightMotor.set(-0.5);
-        System.out.println("Running default auto");
-        break;
+        if(mTimer.get() < 2.65) { //1- Drive Forward 20 inches ( and stow servo inside)
+            mDrive.tankDrive(leftSpeed:.5,rightSpeed:.5);
+            backServo.setPosition(pos:1);
+          }
+
+          else if(mTimer.get()<3.15) {//2- Turn 90 degrees to the right
+            mDrive.tankDrive(leftSpeed:.7, rightSpeed:-.7);
+
+
+          }
+          else if(mTimer.get()<6.0) {//3 - back up to the "goal"
+            mDrive.tankDrive(leftSpeed:-.5, rightSpeed:-.5);
+
+
+          }
+
+          else if(mTimer.get()<8.0){
+
+            mDrive.tankDrive(leftSpeed:0, rightSpeed:0);
+            backServo.setPosition(pos:1);
+          }
+
+          //System.out.println("Running default auto");
+          else {//step end the last one
+            mDrive.tankDrive(leftSpeed:0, rightSpeed:0);
+          }
+          break;
+      }
     }
-  }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -104,29 +129,29 @@ switch (m_autoSelected) {
     m_rightMotor.set(rightSpeed);
 
 
-    // if (m_controller.getAButton()) {
-    //   m_leftMotor.set(0.5);
-    // } else {
-    //   m_leftMotor.set(0);
-    // } 
+     if (m_controller.getAButton()) {
+       m_leftMotor.set(0.5);
+     } else {
+       m_leftMotor.set(0);
+     } 
 
-    // if (m_controller.getBButton()){
-    //   m_rightMotor.set(0.5);
-    // } else {
-    //   m_rightMotor.set(0);
-    // }
+     if (m_controller.getBButton()){
+       m_rightMotor.set(0.5);
+     } else {
+       m_rightMotor.set(0);
+     }
 
-    // if (m_controller.getXButton()) {
-    //   m_leftMotor.set(-0.5);
-    // } else { 
-    //   m_leftMotor.set(0);
-    //   }
+     if (m_controller.getXButton()) {
+       m_leftMotor.set(-0.5);
+     } else { 
+       m_leftMotor.set(0);
+       }
 
-    // if (m_controller.getYButton()) {
-    //   m_rightMotor.set(-0.5);
-    // } else {
-    //   m_rightMotor.set(0);
-    // }
+     if (m_controller.getYButton()) {
+       m_rightMotor.set(-0.5);
+     } else {
+       m_rightMotor.set(0);
+     }
   }
 
 
